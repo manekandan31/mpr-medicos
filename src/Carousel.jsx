@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 
 const Carousel = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -107,9 +107,9 @@ const Carousel = () => {
     }
   ];
 
-  const nextSlide = () => {
+  const nextSlide = useCallback(() => {
     setCurrentSlide((prev) => (prev + 1) % slides.length);
-  };
+  }, [slides.length]);
 
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
@@ -140,11 +140,9 @@ const Carousel = () => {
 
   // Auto-play feature
   useEffect(() => {
-    const timer = setInterval(() => {
-      nextSlide();
-    }, 5000); // Change slide every 5 seconds
-    return () => clearInterval(timer);
-  }, []);
+    const interval = setInterval(nextSlide, 5000);
+    return () => clearInterval(interval);
+  }, [nextSlide]);
 
   return (
     <div

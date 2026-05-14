@@ -180,7 +180,7 @@ const Login = () => {
               <label style={{ display: "flex", alignItems: "center", gap: "5px", cursor: "pointer", color: "#E2D8D0" }}>
                 <input type="checkbox" /> Remember me
               </label>
-              <a href="#" style={{ color: "#D4AF37", textDecoration: "none" }}>Forgot Password?</a>
+                  <a href="#!" onClick={() => setLoginType('admin')} style={{ color: '#AA7C11', textDecoration: 'none', fontWeight: 'bold' }}>Admin Login</a>
             </div>
 
             <button 

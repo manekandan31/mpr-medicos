@@ -19,14 +19,7 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// Dummy component for protected pages so they don't crash
-const DummyProtectedPage = ({ title }) => {
-  return (
-    <div style={{ backgroundColor: "#FDFBF7", minHeight: "100vh", color: "#110b09", display: "flex", justifyContent: "center", alignItems: "center" }}>
-      <h1 style={{ color: "#AA7C11" }}>{title} Page (Coming Soon)</h1>
-    </div>
-  );
-};
+
 
 function App() {
   return (
