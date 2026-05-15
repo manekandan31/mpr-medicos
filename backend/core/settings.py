@@ -97,7 +97,7 @@ DATABASES = {
         'NAME': 'mpr_medicos_db',
         'ENFORCE_SCHEMA': False,
         'CLIENT': {
-            'host': 'mongodb://localhost:27017'
+            'host': os.environ.get('DATABASE_URL', 'mongodb://localhost:27017'),
         }
     }
 }
