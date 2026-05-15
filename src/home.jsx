@@ -207,6 +207,7 @@ const Home = () => {
           <video 
             key={videoSrc}
             controls 
+            crossOrigin="anonymous"
             style={{
               position: "absolute",
               top: 0,
