@@ -6,7 +6,7 @@ import { useAuth } from "./AuthContext";
 
 const Home = () => {
   const { user } = useAuth();
-  const [videoSrc, setVideoSrc] = useState("http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4");
+  const [videoSrc, setVideoSrc] = useState("https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4");
   const fileInputRef = useRef(null);
 
   // Fetch persistent video from backend on mount
