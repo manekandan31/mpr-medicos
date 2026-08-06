@@ -17,6 +17,19 @@ const Course = () => {
 
   const videoInputRef = useRef(null);
   const pdfInputRef = useRef(null);
+  const videoUrlInputRef = useRef(null);
+
+  const isYouTubeUrl = (url) => url && (url.includes('youtube.com') || url.includes('youtu.be'));
+
+  const getYouTubeEmbedUrl = (url) => {
+    if (!url) return null;
+    if (url.includes('youtube.com/embed/')) return url;
+    const shortMatch = url.match(/youtu\.be\/([^?&]+)/);
+    if (shortMatch) return `https://www.youtube.com/embed/${shortMatch[1]}`;
+    const longMatch = url.match(/[?&]v=([^?&]+)/);
+    if (longMatch) return `https://www.youtube.com/embed/${longMatch[1]}`;
+    return url;
+  };
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -104,6 +117,22 @@ const Course = () => {
         alert(`${type} updated!`);
       } catch (err) { alert("Upload failed."); }
     }
+  };
+
+  const handleSaveVideoUrl = async () => {
+    const url = videoUrlInputRef.current?.value?.trim();
+    if (!url || !selectedTopic) return alert("Please enter a video URL.");
+    try {
+      const formData = new FormData();
+      formData.append('video_link', url);
+      const response = await fetch(`${API_URL}/api/topic/${selectedTopic}/update/`, {
+        method: "POST", body: formData,
+      });
+      const data = await response.json();
+      setTopicVideo(data.video_url);
+      videoUrlInputRef.current.value = '';
+      alert("Video URL saved successfully!");
+    } catch (err) { alert("Failed to save URL."); }
   };
 
   const TopicSection = ({ title, emoji, items, color }) => (
@@ -204,9 +233,36 @@ const Course = () => {
             <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: "50px" }}>
               <div style={{ flex: 2 }}>
                 <div style={{ position: "relative", background: "#000", borderRadius: "30px", overflow: "hidden", aspectRatio: "16/9" }}>
-                  {topicVideo ? <video controls style={{ width: "100%", height: "100%" }} src={topicVideo} /> : <div style={{ color: "white", height: "100%", display: "flex", justifyContent: "center", alignItems: "center" }}>Video Loading...</div>}
-                  {isAdmin && <button onClick={() => videoInputRef.current.click()} style={{ position: "absolute", top: "20px", right: "20px", padding: "10px 20px", background: "#AA7C11", color: "white", border: "none", borderRadius: "15px", fontWeight: "bold" }}>Edit Video</button>}
+                  {topicVideo && isYouTubeUrl(topicVideo) ? (
+                    <iframe
+                      src={getYouTubeEmbedUrl(topicVideo)}
+                      style={{ width: "100%", height: "100%", border: "none" }}
+                      allowFullScreen
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      title={selectedTopic}
+                    />
+                  ) : topicVideo ? (
+                    <video controls playsInline style={{ width: "100%", height: "100%" }} src={topicVideo} />
+                  ) : (
+                    <div style={{ color: "white", height: "200px", display: "flex", justifyContent: "center", alignItems: "center", flexDirection: "column", gap: "10px" }}>
+                      <span style={{ fontSize: "40px" }}>🎬</span>
+                      <span style={{ fontSize: "14px", opacity: 0.7 }}>No video added yet</span>
+                    </div>
+                  )}
+                  {isAdmin && <button onClick={() => videoInputRef.current.click()} style={{ position: "absolute", top: "15px", right: "15px", padding: "8px 16px", background: "#AA7C11", color: "white", border: "none", borderRadius: "12px", fontWeight: "bold", fontSize: "12px", zIndex: 10 }}>📁 Upload File</button>}
                 </div>
+                {isAdmin && (
+                  <div style={{ marginTop: "15px", display: "flex", gap: "10px" }}>
+                    <input
+                      ref={videoUrlInputRef}
+                      type="text"
+                      placeholder="Paste YouTube URL (e.g. https://youtu.be/...)"
+                      defaultValue={isYouTubeUrl(topicVideo) ? topicVideo : ''}
+                      style={{ flex: 1, padding: "10px 14px", borderRadius: "12px", border: "1px solid #ddd", fontSize: "13px", outline: "none" }}
+                    />
+                    <button onClick={handleSaveVideoUrl} style={{ background: "#AA7C11", color: "white", border: "none", padding: "10px 18px", borderRadius: "12px", fontWeight: "bold", cursor: "pointer", whiteSpace: "nowrap" }}>💾 Save URL</button>
+                  </div>
+                )}
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "30px" }}>
                 <div style={{ background: "white", padding: "30px", borderRadius: "25px", border: "1px solid rgba(0,0,0,0.05)", opacity: (videoCompleted || isAdmin) ? 1 : 0.6 }}>

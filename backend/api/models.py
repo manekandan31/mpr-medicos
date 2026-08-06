@@ -20,6 +20,7 @@ class TopicContent(models.Model):
     topic_name = models.CharField(max_length=100, unique=True)
     video_file = models.FileField(upload_to='topic_videos/', null=True, blank=True)
     pdf_file = models.FileField(upload_to='topic_pdfs/', null=True, blank=True)
+    video_link = models.CharField(max_length=1000, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):

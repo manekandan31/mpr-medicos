@@ -46,10 +46,15 @@ def update_video(request):
 def get_topic_content(request, topic_name):
     content = TopicContent.objects.filter(topic_name=topic_name).first()
     if content:
-        return Response({
-            'video_url': request.build_absolute_uri(content.video_file.url) if content.video_file else None,
-            'pdf_url': request.build_absolute_uri(content.pdf_url) if hasattr(content, 'pdf_url') else None,
-        })
+        # Prefer video_link (YouTube URL) over uploaded file
+        if content.video_link:
+            video_url = content.video_link
+        elif content.video_file:
+            video_url = request.build_absolute_uri(content.video_file.url)
+        else:
+            video_url = None
+        pdf_url = request.build_absolute_uri(content.pdf_file.url) if content.pdf_file else None
+        return Response({'video_url': video_url, 'pdf_url': pdf_url})
     return Response({'video_url': None, 'pdf_url': None})
 
 @api_view(['POST'])
@@ -57,13 +62,28 @@ def get_topic_content(request, topic_name):
 def update_topic_content(request, topic_name):
     video = request.FILES.get('video')
     pdf = request.FILES.get('pdf')
+    video_link = request.data.get('video_link', '')
     content, created = TopicContent.objects.get_or_create(topic_name=topic_name)
-    if video: content.video_file = video
-    if pdf: content.pdf_file = pdf
+    if video:
+        content.video_file = video
+        content.video_link = ''  # Clear link when file is uploaded
+    if pdf:
+        content.pdf_file = pdf
+    if video_link:
+        content.video_link = video_link  # Save YouTube/external URL
     content.save()
+
+    # Return the best available video URL
+    if content.video_link:
+        video_url = content.video_link
+    elif content.video_file:
+        video_url = request.build_absolute_uri(content.video_file.url)
+    else:
+        video_url = None
+
     return Response({
         'message': 'Topic content updated successfully',
-        'video_url': request.build_absolute_uri(content.video_file.url) if content.video_file else None,
+        'video_url': video_url,
         'pdf_url': request.build_absolute_uri(content.pdf_file.url) if content.pdf_file else None,
     })
 
