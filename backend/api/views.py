@@ -3,8 +3,12 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from .models import Student, SiteContent, TopicContent
 from django.contrib.auth.hashers import make_password, check_password
+from django.http import JsonResponse
 import google.generativeai as genai
 import os
+
+def health_check(request):
+    return JsonResponse({'status': 'ok'})
 
 @api_view(['POST'])
 def student_login(request):

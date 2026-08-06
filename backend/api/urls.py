@@ -1,7 +1,8 @@
 from django.urls import path
-from .views import student_login, get_video, update_video, get_topic_content, update_topic_content, ai_chat
+from .views import student_login, get_video, update_video, get_topic_content, update_topic_content, ai_chat, health_check
 
 urlpatterns = [
+    path('', health_check, name='health_check'),
     path('login/student/', student_login, name='student_login'),
     path('site/video/', get_video, name='get_video'),
     path('site/video/update/', update_video, name='update_video'),
