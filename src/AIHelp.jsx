@@ -38,19 +38,41 @@ const AIHelp = () => {
     setImagePreview(null);
     setLoading(true);
 
+    // Show "waking up" message after 6 seconds (Render cold start)
+    const wakingTimer = setTimeout(() => {
+      setMessages(prev => [...prev, { 
+        role: "assistant", 
+        content: "⏳ The AI server is waking up (Render free tier sleeps after inactivity). Please wait 30-60 seconds..." 
+      }]);
+    }, 6000);
+
     try {
       const formData = new FormData();
-      formData.append("message", textToSend);
+      formData.append("message", textToSend || "");
       if (imgToSend) formData.append("image", imgToSend);
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120000); // 2 min timeout
 
       const response = await fetch(`${API_URL}/api/ai/chat/`, {
         method: "POST",
         body: formData,
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
+      clearTimeout(wakingTimer);
+      // Remove "waking up" message if it appeared
+      setMessages(prev => prev.filter(m => !m.content.includes("waking up")));
       const data = await response.json();
       setMessages(prev => [...prev, { role: "assistant", content: data.reply }]);
     } catch (err) {
-      setMessages(prev => [...prev, { role: "assistant", content: "Error connecting to AI." }]);
+      clearTimeout(wakingTimer);
+      setMessages(prev => prev.filter(m => !m.content.includes("waking up")));
+      if (err.name === 'AbortError') {
+        setMessages(prev => [...prev, { role: "assistant", content: "⚠️ The request timed out. The server may still be starting. Please try again in a moment." }]);
+      } else {
+        setMessages(prev => [...prev, { role: "assistant", content: "❌ Could not connect to AI server. Please try sending your message again." }]);
+      }
     } finally {
       setLoading(false);
     }
