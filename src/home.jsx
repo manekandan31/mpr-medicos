@@ -207,7 +207,7 @@ const Home = () => {
           <video 
             key={videoSrc}
             controls 
-            crossOrigin="anonymous"
+            playsInline
             style={{
               position: "absolute",
               top: 0,
