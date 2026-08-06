@@ -11,6 +11,8 @@ const AIHelp = () => {
   const [loading, setLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   
   const chatEndRef = useRef(null);
   const imageInputRef = useRef(null);
@@ -27,17 +29,23 @@ const AIHelp = () => {
 
   const handleSend = async (textOverride = null) => {
     const textToSend = textOverride || input;
-    if (!textToSend.trim()) return;
+    if (!textToSend.trim() && !selectedImage) return;
 
-    setMessages(prev => [...prev, { role: "user", content: textToSend }]);
+    setMessages(prev => [...prev, { role: "user", content: textToSend, image: imagePreview }]);
     setInput("");
+    const imgToSend = selectedImage;
+    setSelectedImage(null);
+    setImagePreview(null);
     setLoading(true);
 
     try {
+      const formData = new FormData();
+      formData.append("message", textToSend);
+      if (imgToSend) formData.append("image", imgToSend);
+
       const response = await fetch(`${API_URL}/api/ai/chat/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: textToSend }),
+        body: formData,
       });
       const data = await response.json();
       setMessages(prev => [...prev, { role: "assistant", content: data.reply }]);
@@ -98,6 +106,7 @@ const AIHelp = () => {
                   boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
                   lineHeight: "1.5"
                 }}>
+                  {m.image && <img src={m.image} alt="upload" style={{maxWidth: "100%", maxHeight: "150px", borderRadius: "8px", marginBottom: "8px", display: "block"}} />}
                   {m.role === "assistant" ? <ReactMarkdown>{m.content}</ReactMarkdown> : m.content}
                 </div>
                 <span style={{ fontSize: "9px", color: "#999", marginTop: "4px", fontWeight: "bold" }}>{m.role.toUpperCase()}</span>
@@ -108,10 +117,18 @@ const AIHelp = () => {
           </div>
 
           {/* Input Area - RE-ENGINEERED FOR MOBILE */}
-          <div style={{ 
-            padding: "10px 12px", 
-            background: "white", 
-            borderTop: "1px solid #eee",
+          <div style={{display: 'flex', flexDirection: 'column', width: '100%'}}>
+            {imagePreview && (
+              <div style={{padding: "10px 20px", background: "#f9f9f9", display: "flex", alignItems: "center", gap: "10px", borderTop: "1px solid #eee"}}>
+                 <img src={imagePreview} alt="preview" style={{height: "40px", borderRadius: "5px"}} />
+                 <span style={{fontSize: "12px", color: "#666"}}>{selectedImage?.name}</span>
+                 <button onClick={() => {setSelectedImage(null); setImagePreview(null);}} style={{background: "none", border: "none", color: "#ff4444", cursor: "pointer", fontWeight: "bold", marginLeft: "auto"}}>✕</button>
+              </div>
+            )}
+            <div style={{ 
+              padding: "10px 12px", 
+              background: "white", 
+              borderTop: "1px solid #eee",
             display: "flex",
             alignItems: "center",
             width: "100%",
@@ -156,8 +173,22 @@ const AIHelp = () => {
           </div>
         </div>
       </div>
+    </div>
 
-      <input type="file" accept="image/*" ref={imageInputRef} style={{ display: "none" }} />
+      <input 
+        type="file" 
+        accept="image/*" 
+        ref={imageInputRef} 
+        style={{ display: "none" }} 
+        onChange={(e) => {
+          const file = e.target.files[0];
+          if (file) {
+            setSelectedImage(file);
+            setImagePreview(URL.createObjectURL(file));
+          }
+          e.target.value = null;
+        }} 
+      />
       <style>{`.markdown-content p { margin: 0; }`}</style>
     </div>
   );

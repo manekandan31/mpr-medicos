@@ -68,10 +68,13 @@ def update_topic_content(request, topic_name):
     })
 
 @api_view(['POST'])
+@parser_classes([MultiPartParser, FormParser])
 def ai_chat(request):
-    user_message = request.data.get('message')
-    if not user_message:
-        return Response({'reply': 'I didn\'t catch that. Could you repeat your question?'})
+    user_message = request.data.get('message', '')
+    image_file = request.FILES.get('image')
+
+    if not user_message and not image_file:
+        return Response({'reply': 'I didn\'t catch that. Could you repeat your question or provide an image?'})
     
     api_key = os.environ.get("GEMINI_API_KEY")
     if not api_key:
@@ -80,9 +83,16 @@ def ai_chat(request):
     try:
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-flash-latest')
-        response = model.generate_content(
-            f"You are MPR Medicos AI, a premium medical education assistant. Answer this medical query professionally and clearly: {user_message}"
-        )
+        
+        content = [f"You are MPR Medicos AI, a premium medical education assistant. Answer this medical query professionally and clearly: {user_message}"]
+        
+        if image_file:
+            content.append({
+                'mime_type': image_file.content_type,
+                'data': image_file.read()
+            })
+            
+        response = model.generate_content(content)
         return Response({'reply': response.text})
     except Exception as e:
         print(f"Gemini Error: {e}")
