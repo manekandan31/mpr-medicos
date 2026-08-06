@@ -38,7 +38,7 @@ const Home = () => {
         }
       } catch (err) {
         console.error("Upload error:", err);
-        alert("Server error. Is the backend running?");
+        alert("⚠️ Could not connect to the server. The server may be waking up — please wait 30 seconds and try again.");
       }
     }
   };
